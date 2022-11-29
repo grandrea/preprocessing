@@ -135,6 +135,10 @@ def main(mgf, fasta, xi_cnf, outpath, threads, xi_jar='./resources/XiSearch_1.6.
         error_file = open(outpath + '/ms1_err.csv', 'a')
         error_file.write(filename + ',' + str(ms1_err) + '\n')
         error_file.close()
+
+        error_file_ms2 = open(outpath + '/ms2_err.csv', 'a')
+        error_file_ms2.write(filename + ',' + str(ms2_err) + '\n')
+        error_file_ms2.close()
     else:
         ms1_input = pd.read_csv(val_input, header=None, index_col=0)
         ms1_err = ms1_input[ms1_input.index.str.contains('_'.join(filename.split('_')[1:]))].values[0][0]

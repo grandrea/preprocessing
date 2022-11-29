@@ -18,12 +18,13 @@ def read_cmdline():
         opts, args = getopt.getopt(sys.argv[1:], '', ['input=', 'config=', 'outpath=', 'db=', 'xiconf=', 'shiftcsv=', 'skip_recal='])
     except getopt.GetoptError:
         print(sys.argv[1:])
-        print('preprocessing.py --input <folder or single file to process> '
-              '--outpath <directory for output, default is separate folder in input directory> '
-              '--config <path to config file> '
-              '--db <path to database to search for recalibration>'
-              '--xiconf <path to xi config to use for recalibration>',
-              '--shiftcsv <path to csv with fixed shifts> --skip_recal <boolean>')
+        print('preprocessing.py --input <folder or single file to process> \n'
+              '--outpath <directory for output, default is separate folder in input directory> \n'
+              '--config <path to config file> \n'
+              '--db <path to database to search for recalibration>\n'
+              '--xiconf <path to xi config to use for recalibration>\n',
+              '--shiftcsv <path to csv with fixed shifts>\n',
+              '--skip_recal <boolean>\n')
         sys.exit()
     recal = True
     recal_conf = {}
@@ -44,12 +45,13 @@ def read_cmdline():
             recal = False
 
     if 'input_arg' not in locals() or 'config' not in locals():
-        print('preprocessing.py --input <folder or single file to process> '
-              '--outpath <directory for output, default is separate folder in input directory> '
-              '--config <path to config file> '
-              '--db <path to database to search for recalibration>'
-              '--xiconf <path to xi config to use for recalibration>',
-              '--shiftcsv <path to csv with fixed shifts> --skip_recal <boolean>')
+        print('preprocessing.py --input <folder or single file to process> \n',
+              '--outpath <directory for output, default is separate folder in input directory> \n',
+              '--config <path to config file> \n',
+              '--db <path to database to search for recalibration>\n',
+              '--xiconf <path to xi config to use for recalibration>\n',
+              '--shiftcsv <path to csv with fixed shifts>\n',
+              '--skip_recal <boolean>\n')
         sys.exit()
     # if no outdir defined use location of input
     if 'outdir' not in locals() and os.path.isdir(input_arg):
@@ -59,13 +61,14 @@ def read_cmdline():
     if 'shift_csv' not in recal_conf:
         recal_conf['shift_csv'] = None
     if ('db' not in recal_conf or 'xiconf' not in recal_conf) and recal:
-        print('Recalibration enabled but parameters missing! Set --db and --xiconf.'
-              'preprocessing.py --input <folder or single file to process> '
-              '--outpath <directory for output, default is separate folder in input directory> '
-              '--config <path to config file> '
-              '--db <path to database to search for recalibration>'
-              '--xiconf <path to xi config to use for recalibration>',
-              '--shiftcsv <path to csv with fixed shifts> --skip_recal <boolean>')
+        print('Recalibration enabled but parameters missing! Set --db and --xiconf.\n',
+              'preprocessing.py --input <folder or single file to process> \n',
+              '--outpath <directory for output, default is separate folder in input directory> \n',
+              '--config <path to config file> \n',
+              '--db <path to database to search for recalibration>\n',
+              '--xiconf <path to xi config to use for recalibration>\n',
+              '--shiftcsv <path to csv with fixed shifts>\n',
+              '--skip_recal <boolean>')
         sys.exit()
 
     return input_arg, outdir, config, recal_conf, recal
