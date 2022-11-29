@@ -42,6 +42,7 @@ def get_ppm_error(xi_df, peaks_df, outfile):
         fig, ax = plt.subplots()
         sns.histplot(data=xi_df, x='Precoursor Error')
         ax.axvline(median_err)
+        plt.title("MS1 Error distribution \n median: " + str(median_err))
         plt.savefig(outfile)
         plt.close()
     except ZeroDivisionError:
