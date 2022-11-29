@@ -42,4 +42,9 @@ In command line (in windows, this may be powershell, anaconda prompt, or within 
 The .conf file is a xi config file set for a linear search with trypsin digestion. Other files may be chosen with different proteases and they are found in the "resources" directory. Documentation on editing config files with custom settings may be found [here](https://github.com/Rappsilber-Laboratory/XiSearch#setting-up-a-search-in-the-advanced-interface-and-editing-config-files) .
 
 
-
+The output directory contains several files:
+- peakfiles recalibrated according to the ms1 and ms2 errors (recal_*.mgf) **these are the files to be used in a crosslinking MS search by xiSEARCH**
+- .csv files with the average ms1 and ms2 errors per raw file
+- images of the ms1 and ms2 error distributions - these should be symmetric gaussian shapes. If they are not, something may be wrong with the search or the acquisition.
+- peakfiles without any error recalibration (which retain the original file name)
+- .csv file with the xiSEARCH output
