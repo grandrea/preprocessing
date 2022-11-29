@@ -1,27 +1,30 @@
 import os
-import numpy as np
+# import numpy as np
 import subprocess
 from multiprocessing import Pool
 import sys
 import re
 import getopt
-from pyteomics import mzml
+# from pyteomics import mzml
 from functools import partial
 import ProteoFileReader
-import mass_recal
-import zipfile
+import mass_recal_ms2
+# import zipfile
+import glob
 
 
 def read_cmdline():
     try:
         opts, args = getopt.getopt(sys.argv[1:], '', ['input=', 'config=', 'outpath=', 'db=', 'xiconf=', 'shiftcsv=', 'skip_recal='])
     except getopt.GetoptError:
-        print('preprocessing.py --input <folder or single file to process> '
-              '--outpath <directory for output, default is separate folder in input directory> '
-              '--config <path to config file> '
-              '--db <path to database to search for recalibration>'
-              '--xiconf <path to xi config to use for recalibration>',
-              '--shiftcsv <path to csv with fixed shifts> --skip_recal <boolean>')
+        print(sys.argv[1:])
+        print('preprocessing.py --input <folder or single file to process> \n'
+              '--outpath <directory for output, default is separate folder in input directory> \n'
+              '--config <path to config file> \n'
+              '--db <path to database to search for recalibration>\n'
+              '--xiconf <path to xi config to use for recalibration>\n',
+              '--shiftcsv <path to csv with fixed shifts>\n',
+              '--skip_recal <boolean>\n')
         sys.exit()
     recal = True
     recal_conf = {}
@@ -42,12 +45,13 @@ def read_cmdline():
             recal = False
 
     if 'input_arg' not in locals() or 'config' not in locals():
-        print('preprocessing.py --input <folder or single file to process> '
-              '--outpath <directory for output, default is separate folder in input directory> '
-              '--config <path to config file> '
-              '--db <path to database to search for recalibration>'
-              '--xiconf <path to xi config to use for recalibration>',
-              '--shiftcsv <path to csv with fixed shifts> --skip_recal <boolean>')
+        print('preprocessing.py --input <folder or single file to process> \n',
+              '--outpath <directory for output, default is separate folder in input directory> \n',
+              '--config <path to config file> \n',
+              '--db <path to database to search for recalibration>\n',
+              '--xiconf <path to xi config to use for recalibration>\n',
+              '--shiftcsv <path to csv with fixed shifts>\n',
+              '--skip_recal <boolean>\n')
         sys.exit()
     # if no outdir defined use location of input
     if 'outdir' not in locals() and os.path.isdir(input_arg):
@@ -57,13 +61,14 @@ def read_cmdline():
     if 'shift_csv' not in recal_conf:
         recal_conf['shift_csv'] = None
     if ('db' not in recal_conf or 'xiconf' not in recal_conf) and recal:
-        print('Recalibration enabled but parameters missing! Set --db and --xiconf.'
-              'preprocessing.py --input <folder or single file to process> '
-              '--outpath <directory for output, default is separate folder in input directory> '
-              '--config <path to config file> '
-              '--db <path to database to search for recalibration>'
-              '--xiconf <path to xi config to use for recalibration>',
-              '--shiftcsv <path to csv with fixed shifts> --skip_recal <boolean>')
+        print('Recalibration enabled but parameters missing! Set --db and --xiconf.\n',
+              'preprocessing.py --input <folder or single file to process> \n',
+              '--outpath <directory for output, default is separate folder in input directory> \n',
+              '--config <path to config file> \n',
+              '--db <path to database to search for recalibration>\n',
+              '--xiconf <path to xi config to use for recalibration>\n',
+              '--shiftcsv <path to csv with fixed shifts>\n',
+              '--skip_recal <boolean>')
         sys.exit()
 
     return input_arg, outdir, config, recal_conf, recal
@@ -282,12 +287,9 @@ if __name__ == '__main__':
 
     # get files in directory
     if os.path.isdir(input_arg):
-        full_paths = [os.path.join(input_arg, rawfile) for rawfile in os.listdir(input_arg) if rawfile[-4:] == '.raw']
-        full_paths = [x for x in full_paths if not os.path.isdir(x)]
-    # if single file given reformat to list
-    # TODO allow txt file with filepath
-    else:
-        full_paths = [input_arg]
+        file_list = glob.glob(str(input_arg + '/*'))
+        print(file_list)
+        full_paths = [x for x in file_list if (not os.path.isdir(x)) and ((x[-4:] == '.raw') or (x[-4:] == '.mgf'))]
 
     print("""file input:
 {}
@@ -305,19 +307,12 @@ if __name__ == '__main__':
         # pool = Pool(processes=nthr)
         if not os.path.exists(outdir):
             os.makedirs(outdir)
-        output = zipfile.ZipFile(outdir + '/recalibrated_files.zip', 'w', zipfile.ZIP_DEFLATED)
+        # output = zipfile.ZipFile(outdir + '/recalibrated_files.zip', 'w', zipfile.ZIP_DEFLATED)
         # TODO change to parallel with manual input of error
         for inputfile in recal_in:
             if 'ms3' in os.path.split(inputfile)[1]:
                 continue
-            mass_recal.main(fasta=recal_conf['db'], xi_cnf=recal_conf['xiconf'], outpath=outdir,
+            mass_recal_ms2.main(fasta=recal_conf['db'], xi_cnf=recal_conf['xiconf'], outpath=outdir,
                             mgf=inputfile, threads=str(nthr),
-                            val_input=recal_conf['shift_csv']  #'D:/user/Swantje/dsso_ot_it_error/raw/processed_together/ms1_err.csv'
+                            val_input=recal_conf['shift_csv']
                             )
-            # val_input='//130.149.167.198/rappsilbergroup/users/lswantje/DSSO_prepro/xlinkx/processed_wosplit/ms1_err.csv'
-            output.write(os.path.join(outdir, 'recal_' + os.path.split(inputfile)[1]),
-                         arcname='recal_' + os.path.split(inputfile)[1])
-            # pool.map(partial(mass_recal.main, fasta=database, xi_cnf=xi_recal_config, outpath=outdir + '/recal',
-        #                  xi_jar=xi_offline), recal_in)
-        # pool.close()
-        # pool.join()
