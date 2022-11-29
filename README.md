@@ -15,7 +15,7 @@ Before using, edit the path to MSconvert in config.py
 
 Usage:
 
-create a directory with the following structure:
+create a directory with the following structure (this directory tree is not required, it's just to make the paths in the command clearer):
 
     Top
     |
@@ -25,7 +25,7 @@ create a directory with the following structure:
 
 Put your raw files in the "rawfiles" directory. myfasta.fasta is the sequence database you wish to recalibrate on. "processed" will contain your results
 
-In command line (in windows, this may be powershell, anaconda prompt, or within an IDE), fron the top of the directory, run
+In command line (in windows, this may be powershell, anaconda prompt, or within an IDE), from the top of the directory, run
 
     python /path/to/preprocessing_ms2recal.py  --db ./myfasta.fasta --input ./rawfiles --outpath ./processed --xiconf /path/to/resources/xi_linear_by_tryp.conf --config /path/to/config.py
 
