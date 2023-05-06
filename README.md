@@ -1,21 +1,21 @@
 # Preprocessing for xiSEARCH
 
-This set of tools recalibrates MS1 and MS2 spectra based on mass error of a linear proteomics search. It uses [xiSEARCH](https://github.com/Rappsilber-Laboratory/XiSearch) to perform the linear search. This is usually done as the first step in the xiSEARCH workflow, prior to a crosslinking MS search, to improve identifications and understand what MS1 and MS2 error tolerances one should set. It first converts Thermo .raw files into peakfiles in .mgf format using [ProteoWizard MSconvert](https://proteowizard.sourceforge.io/index.html). The script is designed to work with the windows version of msconvert.
+This set of tools recalibrates MS1 and MS2 spectra based on mass error of a linear proteomics search. It uses [xiSEARCH](https://github.com/Rappsilber-Laboratory/XiSearch) to perform the linear search. This is usually done as the first step in the xiSEARCH workflow, prior to a crosslinking MS search, to improve identifications and understand what MS1 and MS2 error tolerances one should set. It first converts Thermo .raw files into peakfiles in .mgf format using [ProteoWizard MSconvert](https://proteowizard.sourceforge.io/index.html). The script is designed to work with the Windows version of msconvert.
 
 The recalibrated .mgf files from this script may then be used as input for a crosslinking MS search with [xiSEARCH](https://github.com/Rappsilber-Laboratory/XiSearch).
 
 If you use this preprocessing script, please cite [Lenz *et al.*, Nat. Comm. 2021](https://www.nature.com/articles/s41467-021-23666-z).
 
-Requirements:
+#### Requirements:
 - [ProteoWizard MSconvert](https://proteowizard.sourceforge.io/index.html)
 - Seaborn
 - Pandas
 
-Before using, edit the path to MSconvert in config.py
+#### Usage:
 
-Usage:
+Before usage, edit config.py to include the path to msconvert.exe.
 
-create a directory with the following structure (this directory tree is not required, it's just to make the paths in the command clearer):
+Create a directory with the following structure (this directory tree is not required, it's just to make the paths in the command clearer):
 
     Top
     |
@@ -35,7 +35,7 @@ In command line (in windows, this may be powershell, anaconda prompt, or within 
 
 --outpath directory for output, default is separate folder in input directory
 
---config path to config.py file
+--config path to config.py file (edited to point to msconvert.exe)
 
 --xiconf  path to .conf file in resources directory
 
@@ -45,6 +45,10 @@ The .conf file is a xi config file set for a linear search with trypsin digestio
 The output directory contains several files:
 - peakfiles recalibrated according to the ms1 and ms2 errors (recal_*.mgf) **these are the files to be used in a crosslinking MS search by xiSEARCH**
 - .csv files with the average ms1 and ms2 errors per raw file
-- images of the ms1 and ms2 error distributions - these should be symmetric gaussian shapes. If they are not, something may be wrong with the search or the acquisition.
+- images of the ms1 and ms2 error distributions - these should be symmetric gaussian shapes. If they are not, something may be wrong with the search or the acquisition. 
 - peakfiles without any error recalibration (which retain the original file name)
 - .csv file with the xiSEARCH output
+- The error distributions may then be used to understand and set the tolerances for ms1 and ms2 matching in a subsequent crosslinking MS search in xiSEARCH.
+
+Depositing into ProteomeXChange repositories:
+Typically, the recalibrated .mgf files are included in the deposition of crosslinking MS results in PRIDE, JPost or other ProteomeXChange repositories.

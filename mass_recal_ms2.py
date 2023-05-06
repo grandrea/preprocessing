@@ -49,8 +49,12 @@ def get_ppm_error(xi_df, peaks_df, outfile):
         print(xi_df['Precoursor Error'][:5])
 
     if len(xi_df) < 50:
-        print(os.path.split(outfile)[1] + ': Only %s PSMs found. No correction.' % (len(xi_df), median_err))
-        return 0, 0
+        try:
+            print(os.path.split(outfile)[1] + ': Only %s PSMs found. No correction.' % (len(xi_df), median_err))
+            return 0, 0
+        except TypeError:
+            print("no PSMs found. No correction")
+            return 0, 0
 
     xi_ms2_df = peaks_df[peaks_df["IsPrimaryMatch"] == 1]
     xi_ms2_df["MS2Error_ppm"] = (xi_ms2_df["MS2Error"] * 10. ** 6) / xi_ms2_df["CalcMZ"]
