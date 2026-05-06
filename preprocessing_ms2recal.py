@@ -247,6 +247,9 @@ def validate_msconvert_backend(msconvert_mode, msconvert_exe, singularity_exe,
         if missing:
             raise ValueError('msconvert_mode="singularity" requires config entries: %s'
                              % ', '.join(missing))
+        if os.path.isdir(singularity_image):
+            raise ValueError('singularity_image must point to a container image file or URI, not a directory: %s'
+                             % singularity_image)
         return
 
     raise ValueError('Unsupported msconvert_mode "%s". Use "native" or "singularity".'
@@ -260,7 +263,7 @@ def build_msconvert_command(conv_cmds, msconvert_mode, msconvert_exe=None,
         return [msconvert_exe] + conv_cmds, None
 
     wine_tmp_dir = tempfile.mkdtemp(prefix='wine', dir='/tmp' if os.path.isdir('/tmp') else None)
-    command = [singularity_exe, 'run']
+    command = [singularity_exe, 'exec']
     for bind_dir in bind_dirs or []:
         command.extend(['-B', bind_dir])
     command.extend(['-B', '%s:%s' % (wine_tmp_dir, singularity_wine_bind_target),
