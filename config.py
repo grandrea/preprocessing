@@ -1,6 +1,10 @@
-msconvert_exe = r'C:\Users\my.name\AppData\Local\Apps\ProteoWizard 3.0.22314.0cd8422 64-bit\msconvert.exe'
+msconvert_mode = 'native'
+msconvert_exe = r'C:\Users\andrea.graziadei\AppData\Local\Apps\ProteoWizard 3.0.26070.691dd28 64-bit\msconvert.exe'
+singularity_exe = 'singularity'
+singularity_image = '/path/to/pwiz-skyline.sif'
+singularity_wine_bind_target = '/tmp/wine-msconvert'
 mscon_settings = ['peakPicking true 2-', 'msLevel 2-', 'titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState>']
 split_acq = False
 detector_filter = 'all'
-nthr = 2
+nthr = 6
 mass_recalibration = True

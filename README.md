@@ -1,19 +1,38 @@
 # Preprocessing for xiSEARCH
 
-This set of tools recalibrates MS1 and MS2 spectra based on mass error of a linear proteomics search. It uses [xiSEARCH](https://github.com/Rappsilber-Laboratory/XiSearch) to perform the linear search. This is usually done as the first step in the xiSEARCH workflow, prior to a crosslinking MS search, to improve identifications and understand what MS1 and MS2 error tolerances one should set. It first converts Thermo .raw files into peakfiles in .mgf format using [ProteoWizard MSconvert](https://proteowizard.sourceforge.io/index.html). The script is designed to work with the Windows version of msconvert.
+This set of tools recalibrates MS1 and MS2 spectra based on mass error of a linear proteomics search. It uses [xiSEARCH](https://github.com/Rappsilber-Laboratory/XiSearch) to perform the linear search. This is usually done as the first step in the xiSEARCH workflow, prior to a crosslinking MS search, to improve identifications and understand what MS1 and MS2 error tolerances one should set. It first converts Thermo .raw files into peakfiles in .mgf format using [ProteoWizard MSconvert](https://proteowizard.sourceforge.io/index.html). The script can call either a native `msconvert.exe` installation or a Singularity image that exposes `msconvert`.
 
 The recalibrated .mgf files from this script may then be used as input for a crosslinking MS search with [xiSEARCH](https://github.com/Rappsilber-Laboratory/XiSearch).
 
 If you use this preprocessing script, please cite [Lenz *et al.*, Nat. Comm. 2021](https://www.nature.com/articles/s41467-021-23666-z).
 
 #### Requirements:
-- [ProteoWizard MSconvert](https://proteowizard.sourceforge.io/index.html)
+- [ProteoWizard MSconvert](https://proteowizard.sourceforge.io/index.html) for native mode
+- [Singularity](https://sylabs.io/docs/) and a `pwiz-skyline.sif`-style image for container mode
 - Seaborn
 - Pandas
 
 #### Usage:
 
-Before usage, edit config.py to include the path to msconvert.exe.
+Before usage, edit `config.py` to choose the msconvert backend.
+
+Native mode:
+
+    msconvert_mode = 'native'
+    msconvert_exe = r'/path/to/msconvert.exe'
+
+Singularity mode:
+
+    msconvert_mode = 'singularity'
+    singularity_exe = 'singularity'
+    singularity_image = '/path/to/pwiz-skyline.sif'
+    singularity_wine_bind_target = '/tmp/wine-msconvert'
+
+In singularity mode, `preprocessing_ms2recal.py` keeps the same CLI, but it runs msconvert through:
+
+    singularity run -B <input/output/db/xiconf dirs> -B <tempdir>:<wine bind target> /path/to/pwiz-skyline.sif msconvert ...
+
+The directories implied by `--input`, `--outpath`, `--db`, and `--xiconf` are bound automatically. These paths must already be valid on the host running Singularity; the script does not translate Windows paths into Linux paths.
 
 Create a directory with the following structure (this directory tree is not required, it's just to make the paths in the command clearer):
 
@@ -25,7 +44,7 @@ Create a directory with the following structure (this directory tree is not requ
 
 Put your raw files in the "rawfiles" directory. myfasta.fasta is the sequence database you wish to recalibrate on. "processed" will contain your results
 
-In command line (in windows, this may be powershell, anaconda prompt, or within an IDE), from the top of the directory, run
+In command line, from the top of the directory, run
 
     python /path/to/preprocessing_ms2recal.py  --db ./myfasta.fasta --input ./rawfiles --outpath ./processed --xiconf /path/to/resources/xi_linear_by_tryp.conf --config /path/to/config.py
 
@@ -35,7 +54,7 @@ In command line (in windows, this may be powershell, anaconda prompt, or within 
 
 --outpath directory for output, default is separate folder in input directory
 
---config path to config.py file (edited to point to msconvert.exe)
+--config path to config.py file (edited to choose either native or singularity msconvert)
 
 --xiconf  path to .conf file in resources directory
 
