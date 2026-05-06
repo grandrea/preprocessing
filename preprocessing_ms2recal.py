@@ -268,11 +268,18 @@ def validate_msconvert_backend(msconvert_mode, msconvert_exe, singularity_exe,
 
 def build_msconvert_command(conv_cmds, msconvert_mode, msconvert_exe=None,
                             singularity_exe=None, singularity_image=None,
-                            singularity_wine_bind_target=None, bind_dirs=None):
+                            singularity_wine_bind_target=None, bind_dirs=None,
+                            singularity_tmp_root=None):
     if msconvert_mode == 'native':
         return [msconvert_exe] + conv_cmds, None
 
-    wine_tmp_dir = tempfile.mkdtemp(prefix='wine', dir='/tmp' if os.path.isdir('/tmp') else None)
+    temp_root = singularity_tmp_root
+    if temp_root is not None:
+        temp_root = os.path.abspath(temp_root)
+        if not os.path.exists(temp_root):
+            os.makedirs(temp_root)
+
+    wine_tmp_dir = tempfile.mkdtemp(prefix='wine', dir=temp_root if temp_root else ('/tmp' if os.path.isdir('/tmp') else None))
     command = [singularity_exe, 'run']
     for bind_dir in bind_dirs or []:
         command.extend(['-B', bind_dir])
@@ -283,7 +290,8 @@ def build_msconvert_command(conv_cmds, msconvert_mode, msconvert_exe=None,
 
 
 def run_msconvert(conv_cmds, msconvert_mode, msconvert_exe=None, singularity_exe=None,
-                  singularity_image=None, singularity_wine_bind_target=None, bind_dirs=None):
+                  singularity_image=None, singularity_wine_bind_target=None, bind_dirs=None,
+                  singularity_tmp_root=None):
     command, wine_tmp_dir = build_msconvert_command(
         conv_cmds=conv_cmds,
         msconvert_mode=msconvert_mode,
@@ -291,11 +299,21 @@ def run_msconvert(conv_cmds, msconvert_mode, msconvert_exe=None, singularity_exe
         singularity_exe=singularity_exe,
         singularity_image=singularity_image,
         singularity_wine_bind_target=singularity_wine_bind_target,
-        bind_dirs=bind_dirs
+        bind_dirs=bind_dirs,
+        singularity_tmp_root=singularity_tmp_root
     )
 
     try:
-        msconvert = subprocess.Popen(command)
+        process_env = None
+        process_cwd = None
+        if msconvert_mode == 'singularity':
+            process_env = os.environ.copy()
+            process_env['TMPDIR'] = wine_tmp_dir
+            process_env['TMP'] = wine_tmp_dir
+            process_env['TEMP'] = wine_tmp_dir
+            process_cwd = os.path.dirname(conv_cmds[0])
+
+        msconvert = subprocess.Popen(command, cwd=process_cwd, env=process_env)
         msconvert.communicate()
         if msconvert.returncode != 0:
             raise subprocess.CalledProcessError(msconvert.returncode, command)
@@ -354,7 +372,8 @@ END IONS     """.format(title,
 
 def process_file(filepath, outdir, mscon_settings, split_acq, detector_filter, msconvert_mode,
                  mscon_exe=None, singularity_exe=None, singularity_image=None,
-                 singularity_wine_bind_target=None, bind_dirs=None, cihcd_ms3=False): #TODO implement option further up
+                 singularity_wine_bind_target=None, bind_dirs=None, singularity_tmp_root=None,
+                 cihcd_ms3=False): #TODO implement option further up
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
@@ -363,7 +382,8 @@ def process_file(filepath, outdir, mscon_settings, split_acq, detector_filter, m
     if len(conv_cmds) > 0:
         run_msconvert(conv_cmds=conv_cmds, msconvert_mode=msconvert_mode, msconvert_exe=mscon_exe,
                       singularity_exe=singularity_exe, singularity_image=singularity_image,
-                      singularity_wine_bind_target=singularity_wine_bind_target, bind_dirs=bind_dirs)
+                      singularity_wine_bind_target=singularity_wine_bind_target, bind_dirs=bind_dirs,
+                      singularity_tmp_root=singularity_tmp_root)
 
     filename = os.path.split(filepath)[1]
     mzml_file = os.path.join(outdir, filename[:filename.rfind('.')] + '.mzML')
@@ -393,6 +413,7 @@ if __name__ == '__main__':
     singularity_exe = locals().get('singularity_exe')
     singularity_image = locals().get('singularity_image')
     singularity_wine_bind_target = locals().get('singularity_wine_bind_target')
+    singularity_tmp_root = locals().get('singularity_tmp_root')
     validate_msconvert_backend(msconvert_mode, msconvert_exe, singularity_exe,
                                singularity_image, singularity_wine_bind_target)
     bind_dirs = get_bind_directories(input_arg, outdir, recal_conf)
@@ -416,7 +437,7 @@ if __name__ == '__main__':
                      mscon_exe=msconvert_exe, singularity_exe=singularity_exe,
                      singularity_image=singularity_image,
                      singularity_wine_bind_target=singularity_wine_bind_target,
-                     bind_dirs=bind_dirs), full_paths)
+                     bind_dirs=bind_dirs, singularity_tmp_root=singularity_tmp_root), full_paths)
     pool.close()
     pool.join()
 

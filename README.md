@@ -26,13 +26,15 @@ Singularity mode:
     msconvert_mode = 'singularity'
     singularity_exe = 'singularity'
     singularity_image = '/path/to/pwiz-skyline.sif'
-    singularity_wine_bind_target = '/tmp/wine-msconvert'
+    singularity_wine_bind_target = '/path/to/wine-prefix'
+    singularity_tmp_root = '/path/to/wine-temp-root'
 
 In singularity mode, `preprocessing_ms2recal.py` keeps the same CLI, but it runs msconvert through:
 
     singularity run -B <input/output/db/xiconf dirs> -B <tempdir>:<wine bind target> /path/to/pwiz-skyline.sif msconvert ...
 
 The directories implied by `--input`, `--outpath`, `--db`, and `--xiconf` are bound automatically. These paths must already be valid on the host running Singularity; the script does not translate Windows paths into Linux paths.
+If the host `/tmp` is too small for Wine initialization, set `singularity_tmp_root` to a larger scratch location.
 
 Create a directory with the following structure (this directory tree is not required, it's just to make the paths in the command clearer):
 

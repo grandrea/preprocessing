@@ -3,6 +3,7 @@ msconvert_exe = r'/path/to/msconvert.exe'
 singularity_exe = 'singularity'
 singularity_image = '/path/to/pwiz-skyline.sif'
 singularity_wine_bind_target = '/path/to/wine-prefix'
+singularity_tmp_root = '/path/to/wine-temp-root'
 mscon_settings = ['peakPicking true 2-', 'msLevel 2-', 'titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState>']
 split_acq = False
 detector_filter = 'all'
