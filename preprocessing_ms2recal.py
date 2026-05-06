@@ -73,6 +73,16 @@ def read_cmdline():
               '--skip_recal <boolean>')
         sys.exit()
 
+    input_arg = os.path.abspath(input_arg)
+    outdir = os.path.abspath(outdir)
+    config = os.path.abspath(config)
+    if 'db' in recal_conf:
+        recal_conf['db'] = os.path.abspath(recal_conf['db'])
+    if 'xiconf' in recal_conf:
+        recal_conf['xiconf'] = os.path.abspath(recal_conf['xiconf'])
+    if recal_conf['shift_csv'] is not None:
+        recal_conf['shift_csv'] = os.path.abspath(recal_conf['shift_csv'])
+
     return input_arg, outdir, config, recal_conf, recal
 
 
@@ -263,7 +273,7 @@ def build_msconvert_command(conv_cmds, msconvert_mode, msconvert_exe=None,
         return [msconvert_exe] + conv_cmds, None
 
     wine_tmp_dir = tempfile.mkdtemp(prefix='wine', dir='/tmp' if os.path.isdir('/tmp') else None)
-    command = [singularity_exe, 'exec']
+    command = [singularity_exe, 'run']
     for bind_dir in bind_dirs or []:
         command.extend(['-B', bind_dir])
     command.extend(['-B', '%s:%s' % (wine_tmp_dir, singularity_wine_bind_target),
