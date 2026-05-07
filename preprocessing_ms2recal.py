@@ -272,6 +272,14 @@ def validate_msconvert_backend(msconvert_mode, msconvert_exe, singularity_exe,
                      % msconvert_mode)
 
 
+def resolve_msconvert_processes(msconvert_mode, nthr, msconvert_nthr=None):
+    if msconvert_nthr is not None:
+        return int(msconvert_nthr)
+    if msconvert_mode == 'singularity':
+        return 1
+    return int(nthr)
+
+
 def build_msconvert_command(conv_cmds, msconvert_mode, msconvert_exe=None,
                             singularity_exe=None, singularity_image=None,
                             singularity_wine_bind_target=None, bind_dirs=None,
@@ -430,8 +438,10 @@ if __name__ == '__main__':
     singularity_image = locals().get('singularity_image')
     singularity_wine_bind_target = locals().get('singularity_wine_bind_target')
     singularity_tmp_root = locals().get('singularity_tmp_root')
+    msconvert_nthr = locals().get('msconvert_nthr')
     validate_msconvert_backend(msconvert_mode, msconvert_exe, singularity_exe,
                                singularity_image, singularity_wine_bind_target)
+    msconvert_processes = resolve_msconvert_processes(msconvert_mode, nthr, msconvert_nthr)
     bind_dirs = get_bind_directories(input_arg, outdir, recal_conf)
 
     # get files in directory
@@ -447,7 +457,7 @@ if __name__ == '__main__':
 """.format('\n'.join(full_paths)))
 
     # start msconvert for conversion and peak filtering
-    pool = Pool(processes=nthr)
+    pool = Pool(processes=msconvert_processes)
     pool.map(partial(process_file, outdir=outdir, mscon_settings=mscon_settings, split_acq=split_acq,
                      detector_filter=detector_filter, msconvert_mode=msconvert_mode,
                      mscon_exe=msconvert_exe, singularity_exe=singularity_exe,
