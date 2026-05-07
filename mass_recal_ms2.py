@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
+import shutil
 pd.options.mode.chained_assignment = None
 import ProteoFileReader
 import sys
@@ -51,10 +52,10 @@ def get_ppm_error(xi_df, peaks_df, outfile):
     if len(xi_df) < 50:
         try:
             print(os.path.split(outfile)[1] + ': Only %s PSMs found. No correction.' % (len(xi_df), median_err))
-            return 0, 0
+            return None, None
         except TypeError:
             print("no PSMs found. No correction")
-            return 0, 0
+            return None, None
 
     xi_ms2_df = peaks_df[peaks_df["IsPrimaryMatch"] == 1]
     xi_ms2_df["MS2Error_ppm"] = (xi_ms2_df["MS2Error"] * 10. ** 6) / xi_ms2_df["CalcMZ"]
@@ -74,6 +75,15 @@ def get_ppm_error(xi_df, peaks_df, outfile):
     plt.close()
 
     return median_err, median_err_ms2
+
+
+def copy_without_recalibration(mgf_file, outpath):
+    outfile = os.path.join(outpath, 'recal_' + os.path.split(mgf_file)[1])
+    if not os.path.exists(outpath):
+        os.makedirs(outpath)
+    elif os.path.isfile(outfile):
+        return
+    shutil.copyfile(mgf_file, outfile)
 
 
 def adjust_prec_mz(mgf_file, ms1_error, ms2_error, outpath):
@@ -128,6 +138,7 @@ def main(mgf, fasta, xi_cnf, outpath, threads, xi_jar='./resources/XiSearch_1.6.
         os.makedirs(outpath)
 
     filename = os.path.split(mgf)[1]
+    ms2_err = None
     if val_input is None:
         # linear small search in Xi
         run_xi_lin(peakfile=mgf, fasta=fasta, cnf=xi_cnf, outpath=os.path.join(outpath), xipath=xi_jar, threads=threads)
@@ -147,6 +158,11 @@ def main(mgf, fasta, xi_cnf, outpath, threads, xi_jar='./resources/XiSearch_1.6.
     else:
         ms1_input = pd.read_csv(val_input, header=None, index_col=0)
         ms1_err = ms1_input[ms1_input.index.str.contains('_'.join(filename.split('_')[1:]))].values[0][0]
+        ms2_err = 0
+
+    if ms1_err is None or ms2_err is None:
+        copy_without_recalibration(mgf_file=mgf, outpath=os.path.join(outpath))
+        return
 
     if ms1_err is not None: # shift all old m/z by value
         adjust_prec_mz(mgf_file=mgf, ms1_error=ms1_err, ms2_error=ms2_err, outpath=os.path.join(outpath))
