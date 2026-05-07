@@ -216,6 +216,12 @@ def mscon_cmd(filepath, outdir, settings, mgf):
     return cmd_list
 
 
+def expected_msconvert_output(filepath, outdir, mgf):
+    if not mgf:
+        return os.path.join(outdir, os.path.splitext(os.path.basename(filepath))[0] + '.mzML')
+    return os.path.join(outdir, os.path.splitext(os.path.basename(filepath))[0] + '.mgf')
+
+
 def dir_for_bind(path_value):
     if path_value is None:
         return None
@@ -292,6 +298,11 @@ def build_msconvert_command(conv_cmds, msconvert_mode, msconvert_exe=None,
 def run_msconvert(conv_cmds, msconvert_mode, msconvert_exe=None, singularity_exe=None,
                   singularity_image=None, singularity_wine_bind_target=None, bind_dirs=None,
                   singularity_tmp_root=None):
+    expected_output = expected_msconvert_output(
+        filepath=conv_cmds[0],
+        outdir=conv_cmds[conv_cmds.index('-o') + 1],
+        mgf='--mgf' in conv_cmds
+    )
     command, wine_tmp_dir = build_msconvert_command(
         conv_cmds=conv_cmds,
         msconvert_mode=msconvert_mode,
@@ -316,6 +327,11 @@ def run_msconvert(conv_cmds, msconvert_mode, msconvert_exe=None, singularity_exe
         msconvert = subprocess.Popen(command, cwd=process_cwd, env=process_env)
         msconvert.communicate()
         if msconvert.returncode != 0:
+            if (msconvert_mode == 'singularity' and os.path.isfile(expected_output) and
+                    os.path.getsize(expected_output) > 0):
+                print('Warning: msconvert returned exit code %s after writing %s; continuing.'
+                      % (msconvert.returncode, expected_output))
+                return
             raise subprocess.CalledProcessError(msconvert.returncode, command)
     finally:
         if wine_tmp_dir and os.path.isdir(wine_tmp_dir):
